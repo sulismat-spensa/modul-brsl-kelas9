@@ -36,6 +36,23 @@
             box-shadow: 0 2px 6px rgba(0,0,0,0.2);
         }
     </style>
+
+<style id="dl-style">
+  .dl-bar{ position:relative; max-width:72rem; margin:0 auto; padding:0 1rem 1rem; text-align:right; }
+  .dl-btn{ background:#C9A227; color:#1B2A4A; border:none; border-radius:10px; padding:10px 18px; font-weight:800; font-size:14px; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.25); }
+  .dl-btn:hover{ filter:brightness(1.07); }
+  .dl-menu{ display:none; position:absolute; right:1rem; top:100%; margin-top:-6px; background:#fff; border:1px solid #d9e0ec; border-radius:12px; box-shadow:0 10px 30px rgba(27,42,74,.25); padding:6px; z-index:60; min-width:250px; text-align:left; }
+  .dl-menu.show{ display:block; }
+  .dl-menu button{ display:block; width:100%; background:none; border:none; padding:10px 12px; font-size:14px; font-weight:600; color:#22304a; border-radius:8px; cursor:pointer; text-align:left; }
+  .dl-menu button:hover{ background:#F4F6FA; }
+  @media print{
+    .dl-bar, .dl-menu{ display:none !important; }
+    #content-tabung, #content-kerucut, #content-bola{ display:block !important; }
+    #content-kerucut, #content-bola{ page-break-before:always; }
+    button{ display:none !important; }
+    @page{ margin:14mm; }
+  }
+</style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased selection:bg-blue-600 selection:text-white">
 
@@ -69,7 +86,15 @@
                 <a href="#kuis" class="px-3.5 py-2 rounded-lg bg-emerald-500 text-white font-bold hover:bg-emerald-400 transition">✅ Latihan Interaktif</a>
             </nav>
         </div>
-    </header>
+    <div class="dl-bar">
+    <button type="button" class="dl-btn" id="dlBtn">⬇ Unduh / Cetak</button>
+    <div class="dl-menu" id="dlMenu">
+      <button type="button" id="dlPrint">🖨️ Cetak / Simpan PDF</button>
+      <button type="button" id="dlWord">📝 Unduh sebagai Word (.doc)</button>
+      <button type="button" id="dlHtml">💾 Unduh file HTML ini</button>
+    </div>
+  </div>
+</header>
 
     <main class="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-10">
 
@@ -950,5 +975,43 @@
 
         window.addEventListener('DOMContentLoaded', calculateBRSL);
     </script>
+
+<script>
+/* ===== Fasilitas Unduh / Cetak — Modul Interaktif BRSL ===== */
+(function(){
+  var menu = document.getElementById("dlMenu");
+  var btn = document.getElementById("dlBtn");
+  btn.addEventListener("click", function(e){ e.stopPropagation(); menu.classList.toggle("show"); });
+  document.addEventListener("click", function(e){ if (!menu.contains(e.target)) menu.classList.remove("show"); });
+  function bersihKlon(){
+    var klon = document.body.cloneNode(true);
+    var hapus = klon.querySelectorAll('script, .dl-bar, .dl-menu, button, input, select, textarea, [id^="sol-"], [id^="fb-q"]');
+    hapus.forEach(function(n){ n.parentNode && n.parentNode.removeChild(n); });
+    ["content-tabung","content-kerucut","content-bola"].forEach(function(id){
+      var s = klon.querySelector("#" + id);
+      if (s){ s.classList.remove("hidden"); s.removeAttribute("style"); }
+    });
+    return klon.innerHTML;
+  }
+  function unduh(nama, isi, tipe){
+    var blob = new Blob([isi], { type: tipe });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = nama;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);
+  }
+  document.getElementById("dlPrint").addEventListener("click", function(){ menu.classList.remove("show"); window.print(); });
+  document.getElementById("dlWord").addEventListener("click", function(){
+    menu.classList.remove("show");
+    var isi = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Modul Interaktif BRSL — Matematika Kelas IX</title></head><body>' + bersihKlon() + "</body></html>";
+    unduh("modul-interaktif-brsl.doc", isi, "application/msword");
+  });
+  document.getElementById("dlHtml").addEventListener("click", function(){
+    menu.classList.remove("show");
+    var isi = "<!DOCTYPE html>\\n<html>" + document.documentElement.innerHTML + "</html>";
+    unduh("modul-interaktif-brsl.html", isi, "text/html");
+  });
+})();
+</script>
 </body>
 </html>
